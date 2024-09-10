@@ -2,12 +2,20 @@ from transformers import pipeline
 import streamlit as st
 
 # Load the summarization pipeline
-summarizer = pipeline("summarization", model="sshleifer/distilbart-cnn-12-6")
+try:
+    summarizer = pipeline("summarization", model="sshleifer/distilbart-cnn-12-6")
+except Exception as e:
+    st.error(f"Error loading summarization model: {e}")
+    st.stop()
 
 # Function to summarize text
 def summarize_text(text, max_length=130, min_length=30, do_sample=False):
-    summary = summarizer(text, max_length=max_length, min_length=min_length, do_sample=do_sample)
-    return summary[0]['summary_text']
+    try:
+        summary = summarizer(text, max_length=max_length, min_length=min_length, do_sample=do_sample)
+        return summary[0]['summary_text']
+    except Exception as e:
+        st.error(f"Error during summarization: {e}")
+        return ""
 
 # Set the title and add an image
 st.set_page_config(page_title="AI Text Summarizer", page_icon="📝")
@@ -45,8 +53,9 @@ input_text = st.text_area("Enter the text to summarize", height=200)
 if st.button("Summarize"):
     if input_text:
         summary = summarize_text(input_text, max_length=max_length, min_length=min_length, do_sample=do_sample)
-        st.markdown("**Summary:**", unsafe_allow_html=True)
-        st.markdown(f'<div class="summary-box">{summary}</div>', unsafe_allow_html=True)
+        if summary:
+            st.markdown("**Summary:**", unsafe_allow_html=True)
+            st.markdown(f'<div class="summary-box">{summary}</div>', unsafe_allow_html=True)
     else:
         st.error("Please enter some text to summarize.")
 else:
